@@ -2,10 +2,13 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import accuracy_score, classification_report
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
 from sklearn.tree import DecisionTreeClassifier 
+
+from sklearn.neural_network import MLPClassifier
+
 try:
     #! VERİ HAZIRLAMA
     # Veri dosyalarını yükleme
@@ -39,8 +42,7 @@ try:
 
 
     #! BÖLME VE ÖLÇEKLENDİRME
-    print("\n--- AŞAMA 2 BAŞLATILIYOR: Bölme ve Ölçeklendirme ---")
-    # Stratify kullanımı: Sınıf dengesizliğini korumak için kritiktir.
+    # Stratify sınıf dengesizliğini korur.
     x_train, x_test, y_train, y_test = train_test_split(
         x, y_encoded, test_size=0.20, stratify=y, random_state=42
     )
@@ -73,6 +75,8 @@ try:
     print("\nSınıflandırma Raporu:")
     report_lr = classification_report(y_test, y_pred_lr, target_names=le.classes_)#le.classes : (kod->isim)
     print(report_lr)
+
+
     #! MODEL 2: DECISION TREE (KARAR AĞACI)
     print("\n--- Decision Tree (Karar Ağacı) Eğitimi ---")
     
@@ -90,6 +94,32 @@ try:
     print("\nSınıflandırma Raporu:")
     report_dt = classification_report(y_test, y_pred_dt, target_names=le.classes_)
     print(report_dt)
+
+    #! YAPAY SİNİR AĞI (MLPClassifier)
+    #* default YSA
+    print("Default YSA (MLPClassifier) eğitiliyor")
+    
+    mlp_default = MLPClassifier(random_state=42,max_iter=300) # 300 tur
+    mlp_default.fit(x_train_scaled, y_train)
+
+    y_pred_mlp = mlp_default.predict(x_test_scaled)
+    accuracy_mlp = accuracy_score(y_test, y_pred_mlp)
+
+    print(f"\nVarsayılan YSA Doğruluk: {accuracy_mlp * 100:.2f}%")
+    print(classification_report(y_test, y_pred_mlp, target_names=le.classes_))
+
+
+    #! Yapay Sinir Ağı MANUEL DENEME
+    layers = [(100,), (50, 50, 50)]
+    learning_rates = [0.01, 0.001]
+    print("MANUEL DENEMELER (relu)")
+    for layer in layers :
+        for rate in learning_rates:
+            model = MLPClassifier(random_state=42,max_iter=300,activation='relu',hidden_layer_sizes=layer,learning_rate_init=rate)
+            model.fit(x_train_scaled,y_train)
+            score=model.score(x_test_scaled,y_test)
+
+            print(f"Layers: {layer}, Rate: {rate} | Score: %{score*100:.2f}")
 
 except FileNotFoundError:
     print("HATA: Dosyalar bulunamadı")
