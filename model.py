@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
-
+from sklearn.tree import DecisionTreeClassifier 
 try:
     #! VERİ HAZIRLAMA
     # Veri dosyalarını yükleme
@@ -40,6 +40,10 @@ try:
 
     #! BÖLME VE ÖLÇEKLENDİRME
     print("\n--- AŞAMA 2 BAŞLATILIYOR: Bölme ve Ölçeklendirme ---")
+    # Stratify kullanımı: Sınıf dengesizliğini korumak için kritiktir.
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y_encoded, test_size=0.20, stratify=y, random_state=42
+    )
 
     # train test split
     x_train, x_test, y_train, y_test = train_test_split(x, y_encoded, test_size=0.20, stratify=y,random_state=42)
@@ -69,6 +73,23 @@ try:
     print("\nSınıflandırma Raporu:")
     report_lr = classification_report(y_test, y_pred_lr, target_names=le.classes_)#le.classes : (kod->isim)
     print(report_lr)
+    #! MODEL 2: DECISION TREE (KARAR AĞACI)
+    print("\n--- Decision Tree (Karar Ağacı) Eğitimi ---")
+    
+    # Varsayılan bölme kriteri (Information Gain).
+
+    dt_model = DecisionTreeClassifier(criterion='entropy', random_state=42)
+    
+    dt_model.fit(x_train_scaled, y_train)
+    y_pred_dt = dt_model.predict(x_test_scaled)
+
+    print(">>>> DECISION TREE SONUÇLARI <<<<")
+    print(f"Doğruluk (Accuracy): {accuracy_score(y_test, y_pred_dt) * 100:.2f}%")
+    
+    
+    print("\nSınıflandırma Raporu:")
+    report_dt = classification_report(y_test, y_pred_dt, target_names=le.classes_)
+    print(report_dt)
 
 except FileNotFoundError:
     print("HATA: Dosyalar bulunamadı")
