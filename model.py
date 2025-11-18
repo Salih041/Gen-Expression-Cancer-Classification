@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -120,7 +121,35 @@ try:
             score=model.score(x_test_scaled,y_test)
 
             print(f"Layers: {layer}, Rate: {rate} | Score: %{score*100:.2f}")
+    #! Yapay Sinir Ağı GRID SEARCH
+    print("\n--- YSA Hiperparametre Optimizasyonu (Grid Search) ---")
+    mlp_gs = MLPClassifier(random_state=42, max_iter=500)
+    # Parametre Izgarasını (Search Space) Oluşturma
+    parameter_space = {
+        # A. MİMARİ: Yapı sayısı 4'ten 2'ye düşürüldü
+        'hidden_layer_sizes': [(100,), (100, 50)], 
+        'solver': ['adam'], 
+        'learning_rate_init': [0.001, 0.01],
+        'activation': ['relu'], 
+        'alpha': [0.0001, 0.05, 0.1], 
+    }
+    
+    # Grid Search'ü bu yeni uzay ile tekrar çalıştırın
+    clf_gs = GridSearchCV(mlp_gs, parameter_space, n_jobs=-1, cv=3, verbose=1)
+    clf_gs.fit(x_train_scaled, y_train)
+    # Sonuçları Analiz Etme
+    print("\n>>>> GRID SEARCH SONUÇLARI <<<<")
+    print("En İyi Hiperparametreler:", clf_gs.best_params_)
+    print(f"Çapraz Doğrulama (CV) En İyi Skoru: {clf_gs.best_score_ * 100:.2f}%")
+    
+    mlp_best = clf_gs.best_estimator_
+    # Test Setinde Doğrulama
+    y_pred_gs = mlp_best.predict(x_test_scaled)
+    accuracy_gs = accuracy_score(y_test, y_pred_gs)
 
+    print(f"\nEn İyi YSA Modeli Doğruluk (Test Seti): {accuracy_gs * 100:.2f}%")
+    report_gs = classification_report(y_test, y_pred_gs, target_names=le.classes_)
+    print(report_gs)
 except FileNotFoundError:
     print("HATA: Dosyalar bulunamadı")
 except Exception as e:
